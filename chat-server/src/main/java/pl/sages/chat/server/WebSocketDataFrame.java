@@ -16,7 +16,6 @@ public class WebSocketDataFrame {
         } else {
             frameSize += 8 + length;
         }
-
         ByteBuffer buffer = ByteBuffer.allocate(frameSize);
         // puts opcode into the buffer
         buffer.put((byte) (0x80 | 1));
@@ -31,7 +30,6 @@ public class WebSocketDataFrame {
             buffer.put((byte) 127);
             buffer.putLong(length & 0xFFFFFFFFFFFFFFFFL);
         }
-
         buffer.put(payloadBytes);
         return buffer.array();
     }

@@ -11,6 +11,10 @@ public class ChatClient {
 
     public static void main(String[] args) {
 
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter your username for the group chat");
+        String userName = scanner.nextLine();
+
         var webSocketListener = new WebSocket.Listener() {
 
             @Override
@@ -34,7 +38,11 @@ public class ChatClient {
                 .unstarted(() -> webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "Exiting").join());
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-        Scanner scanner = new Scanner(System.in);
+
+
+
+        webSocket.sendText(userName, false).join();
+        System.out.println("You are now in the group chat, type /help for the list of available commands");
 
         while (true) {
            String input = scanner.nextLine();

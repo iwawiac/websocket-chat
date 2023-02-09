@@ -22,12 +22,14 @@ public class ChatServer {
         while(!server.isClosed()) {
             Socket client = server.accept();
             validateWebsocketConnection(client.getInputStream(), client.getOutputStream());
+
+            // creates separate service for each new client responsible for client-server communication
+            // each service operates on a separate thread in order not to block on read operations
             ClientService clientService = new ClientService(client);
             Thread thread = new Thread(clientService);
             thread.start();
         }
     }
-
 
     private static void validateWebsocketConnection(InputStream inputStream, OutputStream outputStream) throws IOException, NoSuchAlgorithmException {
         Scanner s = new Scanner(inputStream, StandardCharsets.UTF_8);
@@ -51,5 +53,4 @@ public class ChatServer {
                 + "\r\n\r\n").getBytes(StandardCharsets.UTF_8);
         out.write(response, 0, response.length);
     }
-
 }
