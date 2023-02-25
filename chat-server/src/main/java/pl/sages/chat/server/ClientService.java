@@ -51,7 +51,12 @@ public class ClientService implements Runnable {
         int messageLength = in.read() - 128;
         messageLength = switch (messageLength) {
             case 127 -> throw new RuntimeException("Very long message!");
-            case 126 -> throw new RuntimeException("Longer message!");
+            case 126 -> {
+                int length1 = in.read();
+                int length2 = in.read();
+                messageLength = (length1 << 8) | length2;
+                yield messageLength;
+            }
             default -> messageLength;
         };
         byte[] decodingKey = new byte[] { (byte) in.read(), (byte) in.read(), (byte) in.read(), (byte) in.read() };
@@ -105,6 +110,7 @@ public class ClientService implements Runnable {
         return "(" + channelName + " channel) " + originalMessage;
     }
 
+    // TODO 1 move the class to MenuUtils, client service should not care about menu implementation
     private void processMenuCommand (String commandFromClient) {
 
         String [] parts = commandFromClient.split(" ");
@@ -147,7 +153,7 @@ public class ClientService implements Runnable {
                     replyFromServerToClient(MenuUtils.activeChannel + channelName);
                 }
                 break;
-            case "/send_file": // TODO 1 add functionality
+            case "/send_file": // TODO 2 add functionality
                 replyFromServerToClient("you are trying to send a file, this functionality is not implemented yet");
                 break;
 

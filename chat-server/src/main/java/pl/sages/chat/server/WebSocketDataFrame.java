@@ -17,7 +17,7 @@ public class WebSocketDataFrame {
             frameSize += 8 + length;
         }
         ByteBuffer buffer = ByteBuffer.allocate(frameSize);
-        // puts opcode into the buffer
+        // puts opcode and fin bits into the buffer
         buffer.put((byte) (0x80 | 1));
 
         // puts appropriate WebSocket message length into the buffer

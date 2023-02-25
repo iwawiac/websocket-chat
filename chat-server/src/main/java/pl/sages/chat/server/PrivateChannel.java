@@ -14,8 +14,6 @@ public class PrivateChannel implements Channel{
         privateChannelList.add(this);
     }
 
-
-
     public String getName() {
         return name;
     }
@@ -30,6 +28,7 @@ public class PrivateChannel implements Channel{
         clientServiceList.add(clientServiceToAdd);
     }
 
+    @Override
     public void removeClientServiceFromChannel(ClientService clientServiceToRemove) {
         clientServiceList.remove(clientServiceToRemove);
     }

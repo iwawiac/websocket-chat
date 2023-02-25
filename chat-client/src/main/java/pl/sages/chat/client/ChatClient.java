@@ -38,9 +38,6 @@ public class ChatClient {
                 .unstarted(() -> webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "Exiting").join());
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-
-
-
         webSocket.sendText(userName, false).join();
         System.out.println("You are now in the group chat, type /help for the list of available commands");
 

@@ -33,9 +33,6 @@ public class GroupChannel implements Channel{
     }
 
 
-
-
-
     // first everyone is added to the group channel - this channel always exists - DONE
     // once create_channel command is used - a new channel is created and user is added to this channel's clientServiceList
     // Channel is set as "active channel" as a ClientService field. There can be only one active channel.
