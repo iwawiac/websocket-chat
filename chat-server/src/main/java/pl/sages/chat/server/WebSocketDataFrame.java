@@ -2,8 +2,7 @@ package pl.sages.chat.server;
 import java.nio.ByteBuffer;
 
 public class WebSocketDataFrame {
-    public static byte[] createDataFrame(String payload) {
-        byte[] payloadBytes = payload.getBytes();
+    public static byte[] createDataFrame(byte [] payloadBytes, boolean isBinary) {
         // calculates length of the payload
         int length = payloadBytes.length;
         // minimum WebSocket message length: 1 byte for opcode and 1 byte for payload length
@@ -18,7 +17,12 @@ public class WebSocketDataFrame {
         }
         ByteBuffer buffer = ByteBuffer.allocate(frameSize);
         // puts opcode and fin bits into the buffer
-        buffer.put((byte) (0x80 | 1));
+        if(!isBinary) {
+            buffer.put((byte) (0x80 | 1));
+        } else {
+            buffer.put((byte) (0x80 | 2));
+        }
+
 
         // puts appropriate WebSocket message length into the buffer
         if (length < 126) {

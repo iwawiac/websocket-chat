@@ -1,8 +1,6 @@
 package pl.sages.chat.server;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,29 +13,41 @@ public class ClientService implements Runnable {
     private Channel activeChannel = GroupChannel.getInstance();
 
     public ClientService(Socket clientSocket) {
-        try{
+        try {
             this.clientSocket = clientSocket;
             this.inputStream = clientSocket.getInputStream();
             this.outputStream = clientSocket.getOutputStream();
-            this.clientUserName = readResponse(this.inputStream);
+            this.clientUserName = new String(ReaderUtils.readResponse(this.inputStream));
             GroupChannel.getInstance().addClientServiceToChannel(this);
-            System.out.println(addTimeStampToTheMessage(this.clientUserName) + " has entered the group chat" );
+            System.out.println(addTimeStampToTheMessage(this.clientUserName) + " has entered the group chat");
             broadcastMessageToClients("Server: " + this.clientUserName + " has entered the group chat", false);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    public void setActiveChannel(Channel activeChannel) {
+        this.activeChannel = activeChannel;
+    }
+
+    public Channel getActiveChannel() {
+        return activeChannel;
+    }
+
+    public InputStream getInputStream() {
+        return inputStream;
+    }
+
     @Override
     public void run() {
         while (clientSocket.isConnected()) {
             String messageFromClient;
-            try{
-                messageFromClient = readResponse(this.inputStream);
-                if(messageFromClient.startsWith("/")) {
-                    processMenuCommand(messageFromClient);
-                } else{
-                    broadcastMessageToClients(clientUserName +": " + messageFromClient, true);
+            try {
+                messageFromClient = new String(ReaderUtils.readResponse(this.inputStream));
+                if (messageFromClient.startsWith("/")) {
+                    MenuUtils.processMenuCommand(messageFromClient, this);
+                } else {
+                    broadcastMessageToClients(clientUserName + ": " + messageFromClient, true);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -46,40 +56,29 @@ public class ClientService implements Runnable {
         }
     }
 
-    private static String readResponse(InputStream in) throws IOException {
-        int opcode = in.read(); // it should always be 0x1 (for now)
-        int messageLength = in.read() - 128;
-        messageLength = switch (messageLength) {
-            case 127 -> throw new RuntimeException("Very long message!");
-            case 126 -> {
-                int length1 = in.read();
-                int length2 = in.read();
-                messageLength = (length1 << 8) | length2;
-                yield messageLength;
-            }
-            default -> messageLength;
-        };
-        byte[] decodingKey = new byte[] { (byte) in.read(), (byte) in.read(), (byte) in.read(), (byte) in.read() };
-        byte[] encodedMessage = in.readNBytes(messageLength);
-        var decodedMessage = new String(DecoderUtils.decodeBytes(encodedMessage, decodingKey));
-
-        if (decodedMessage.contains("\u0003�Exiting")) {
-            System.out.println("Client has disconnected!");
-            System.exit(0);
-        }
-        return decodedMessage;
-    }
-
-    private void broadcastMessageToClients(String messageToBroadcast, boolean addChannelName) {
-        if (addChannelName == true) {
+    public void broadcastMessageToClients(String messageToBroadcast, boolean addChannelName) {
+        if (addChannelName) {
             messageToBroadcast = addTimeStampToTheMessage(addChannelNameToTheMessage(messageToBroadcast));
         } else {
             messageToBroadcast = addTimeStampToTheMessage(messageToBroadcast);
         }
-        byte[] dataframe = WebSocketDataFrame.createDataFrame(messageToBroadcast);
+        byte[] dataframe = WebSocketDataFrame.createDataFrame(messageToBroadcast.getBytes(), false);
+        for (ClientService clientService : activeChannel.getClientServiceList()) {
+            if (clientService != this) {
+                try {
+                    clientService.outputStream.write(dataframe);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void broadcastBinaryToClients(byte [] binaryToBroadcast) {
+        byte [] dataframe = WebSocketDataFrame.createDataFrame(binaryToBroadcast, true);
         for (ClientService clientService : activeChannel.getClientServiceList()) {
             if(clientService != this) {
-                try{
+                try {
                     clientService.outputStream.write(dataframe);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -91,7 +90,7 @@ public class ClientService implements Runnable {
     public void replyFromServerToClient(String messageToSend) {
         try {
             messageToSend = addTimeStampToTheMessage(messageToSend);
-            byte [] dataframe = WebSocketDataFrame.createDataFrame(messageToSend);
+            byte[] dataframe = WebSocketDataFrame.createDataFrame(messageToSend.getBytes(), false);
             this.outputStream.write(dataframe);
         } catch (IOException e) {
             e.printStackTrace();
@@ -109,58 +108,4 @@ public class ClientService implements Runnable {
         String channelName = this.activeChannel.getName();
         return "(" + channelName + " channel) " + originalMessage;
     }
-
-    // TODO 1 move the class to MenuUtils, client service should not care about menu implementation
-    private void processMenuCommand (String commandFromClient) {
-
-        String [] parts = commandFromClient.split(" ");
-        String command = parts[0];
-        System.out.println("command: "+command);
-
-        switch (command) {
-            case "/help":
-                replyFromServerToClient(MenuUtils.helpMessage);
-                break;
-            case "/create_channel":
-                String privateChannelName = parts[1];
-                PrivateChannel newPrivateChannel = new PrivateChannel(privateChannelName);
-                newPrivateChannel.addClientServiceToChannel(this);
-                this.activeChannel = newPrivateChannel;
-                replyFromServerToClient(MenuUtils.createdAndEnteredPrivateChannel + newPrivateChannel.getName());
-                break;
-            case "/join_channel":
-                privateChannelName = parts[1];
-                this.activeChannel = PrivateChannel.findChannelByName(privateChannelName);
-                this.activeChannel.addClientServiceToChannel(this);
-                replyFromServerToClient(MenuUtils.enteredPrivateChannel + privateChannelName);
-                break;
-            case "/leave_channel":
-                privateChannelName = parts[1];
-                Channel channelToLeave = PrivateChannel.findChannelByName(privateChannelName);
-                channelToLeave.removeClientServiceFromChannel(this);
-                this.activeChannel = GroupChannel.getInstance();
-                replyFromServerToClient(MenuUtils.leftPrivateChannel + privateChannelName);
-                replyFromServerToClient(MenuUtils.backToGroupChannel);
-                break;
-            case "/switch_channel":
-                String channelName = parts[1];
-                if(channelName.equals("group")) {
-                    this.activeChannel = GroupChannel.getInstance();
-                    replyFromServerToClient(MenuUtils.backToGroupChannel);
-                } else {
-                    Channel channelToSwitchTo = PrivateChannel.findChannelByName(channelName);
-                    this.activeChannel = channelToSwitchTo;
-                    replyFromServerToClient(MenuUtils.activeChannel + channelName);
-                }
-                break;
-            case "/send_file": // TODO 2 add functionality
-                replyFromServerToClient("you are trying to send a file, this functionality is not implemented yet");
-                break;
-
-            default:
-                replyFromServerToClient(MenuUtils.menuCommandNotFound);
-                break;
-        }
-    }
-
 }
