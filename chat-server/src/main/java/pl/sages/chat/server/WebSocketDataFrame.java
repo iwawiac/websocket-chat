@@ -3,11 +3,10 @@ import java.nio.ByteBuffer;
 
 public class WebSocketDataFrame {
     public static byte[] createDataFrame(byte [] payloadBytes, boolean isBinary) {
-        // calculates length of the payload
         int length = payloadBytes.length;
         // minimum WebSocket message length: 1 byte for opcode and 1 byte for payload length
         int frameSize = 2;
-        // checks payload length and allocates frameSize accordingly
+        // allocates frameSize accordingly
         if (length < 126) {
             frameSize += length;
         } else if (length < 65536) {
@@ -16,13 +15,13 @@ public class WebSocketDataFrame {
             frameSize += 8 + length;
         }
         ByteBuffer buffer = ByteBuffer.allocate(frameSize);
+
         // puts opcode and fin bits into the buffer
         if(!isBinary) {
             buffer.put((byte) (0x80 | 1));
         } else {
             buffer.put((byte) (0x80 | 2));
         }
-
 
         // puts appropriate WebSocket message length into the buffer
         if (length < 126) {

@@ -5,9 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class FileHandlerUtils {
-
     public static void saveFileFromClientOnServer(String fileName, byte [] decodedBinaryFromClient) {
-        File file = new File("server_file" + fileName);
+        File file = new File("server_downloaded_" + fileName);
         try{
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             fileOutputStream.write(decodedBinaryFromClient);

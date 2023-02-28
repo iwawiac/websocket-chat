@@ -32,23 +32,7 @@ public class ReaderUtils {
 
         byte[] decodingKey = new byte[]{(byte) in.read(), (byte) in.read(), (byte) in.read(), (byte) in.read()};
         byte[] encodedMessage = in.readNBytes(messageLength);
-        var decodedBinary = DecoderUtils.decodeBytes(encodedMessage, decodingKey);
-        var decodedMessage = new String(decodedBinary);
-
-        if (decodedMessage.contains("\u0003�Exiting")) {
-            System.out.println("Client has disconnected!");
-            System.exit(0);
-        }
-
-//        if (opcode == 130) {
-//            System.out.println("file received");
-//            File file = new File("server_file");
-//            FileOutputStream fileOutputStream = new FileOutputStream(file);
-//            fileOutputStream.write(decodedBinary);
-//            fileOutputStream.close();
-//        }
-
-        return decodedBinary;
+        return DecoderUtils.decodeBytes(encodedMessage, decodingKey);
     }
 
 }

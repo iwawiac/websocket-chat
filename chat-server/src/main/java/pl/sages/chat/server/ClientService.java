@@ -19,8 +19,6 @@ public class ClientService implements Runnable {
             this.outputStream = clientSocket.getOutputStream();
             this.clientUserName = new String(ReaderUtils.readResponse(this.inputStream));
             GroupChannel.getInstance().addClientServiceToChannel(this);
-            System.out.println(addTimeStampToTheMessage(this.clientUserName) + " has entered the group chat");
-            broadcastMessageToClients("Server: " + this.clientUserName + " has entered the group chat", false);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -40,10 +38,19 @@ public class ClientService implements Runnable {
 
     @Override
     public void run() {
+
+        System.out.println(addTimeStampToTheMessage(this.clientUserName) + " has entered the group chat");
+        broadcastMessageToClients("Server: " + this.clientUserName + " has entered the group chat", false);
+
         while (clientSocket.isConnected()) {
             String messageFromClient;
             try {
                 messageFromClient = new String(ReaderUtils.readResponse(this.inputStream));
+                if(messageFromClient.contains("\u0003�Exiting")) {
+                    System.out.println(this.clientUserName + " has disconnected from the app");
+                    exitAndCleanClientService();
+                    break;
+                }
                 if (messageFromClient.startsWith("/")) {
                     MenuUtils.processMenuCommand(messageFromClient, this);
                 } else {
@@ -107,5 +114,17 @@ public class ClientService implements Runnable {
     private String addChannelNameToTheMessage(String originalMessage) {
         String channelName = this.activeChannel.getName();
         return "(" + channelName + " channel) " + originalMessage;
+    }
+
+    private void exitAndCleanClientService(){
+        PrivateChannel.removeClientServiceFromAllPrivateChannels(this);
+        GroupChannel.getInstance().removeClientServiceFromChannel(this);
+        broadcastMessageToClients("Server: " + clientUserName + " has left the chat", false);
+        try {
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().interrupt();
     }
 }

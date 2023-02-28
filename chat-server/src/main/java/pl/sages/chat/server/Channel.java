@@ -6,8 +6,8 @@ public interface Channel {
 
     List<ClientService> getClientServiceList();
     void addClientServiceToChannel(ClientService clientServiceToAdd);
-    public void removeClientServiceFromChannel(ClientService clientServiceToRemove);
-    public String getName();
+    void removeClientServiceFromChannel(ClientService clientServiceToRemove);
+    String getName();
 
 
 }

@@ -28,9 +28,8 @@ public class ChatClient {
             @Override
             public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
                 if(data.toString().contains("/sending_file")) {
-                    System.out.println("data: " + data.toString());
                     tempFileName = data.toString().split(" ")[2];
-                    System.out.println("file name found: " + tempFileName);
+                    System.out.println("downloading file: "+ tempFileName);
                 } else {
                     System.out.println(data);
                 }
@@ -69,19 +68,36 @@ public class ChatClient {
         webSocket.sendText(userName, true).join();
         System.out.println("You are now in the group chat, type /help for the list of available commands");
 
-
-        while (true) {
+        while (!webSocket.isOutputClosed() && !webSocket.isInputClosed()) {
             String input = scanner.nextLine();
-
             if (input.contains("/send_file")) {
-                File file = getFile("test3.jpg", listFiles());
+                String [] parts = input.split(" ");
+                if(parts.length!=2) {
+                    System.out.println("please provide one argument for the fileName");
+                    System.out.println("current files available are: ");
+                    listFiles(true);
+                    continue;
+                }
+
+                String fileName = parts[1];
+                File file = getFile(fileName, listFiles(false));
+
+                if(file == null) {
+                    System.out.println("no such file found: " + parts[1]);
+                    System.out.println("current files available are: ");
+                    listFiles(true);
+                    continue;
+                }
+
                 try{
                     ByteBuffer buffer = readFileIntoByteBuffer(file);
                     webSocket.sendText("/send_file test3.jpg", true);
                     webSocket.sendBinary(buffer, true).join();
+                    System.out.println("file sent");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
             } else {
                 webSocket.sendText(input, true).join();
             }
@@ -91,14 +107,13 @@ public class ChatClient {
     public static File getFile(String fileName, List<File> fileList) {
         for (File file: fileList) {
             if (file.getName().equals(fileName)) {
-                System.out.println("file found");
                 return file;
             }
         }
         return null;
     }
 
-    public static List<File> listFiles() {
+    public static List<File> listFiles(Boolean printToConsole) {
         List<File> fileList = new ArrayList<>();
         File folder = new File(System.getProperty("user.dir"));
         if (folder.exists() && folder.isDirectory()) {
@@ -106,6 +121,9 @@ public class ChatClient {
             for (File file : files) {
                 if (file.isFile()) {
                     fileList.add(file);
+                    if(printToConsole) {
+                        System.out.println(file.getName());
+                    }
                 }
             }
         }
@@ -113,18 +131,13 @@ public class ChatClient {
     }
 
     public static ByteBuffer readFileIntoByteBuffer(File file) throws IOException {
-        // Create a new file object with the given file name
         // Open a file channel to read the file
         FileChannel channel = new FileInputStream(file).getChannel();
-        // Create a byte buffer to hold the contents of the file
         ByteBuffer buffer = ByteBuffer.allocate((int) channel.size());
         // Read the contents of the file into the byte buffer
         channel.read(buffer);
-        // Close the file channel
         channel.close();
-        // Set the position of the buffer to the beginning
         buffer.rewind();
-        // Return the byte buffer
         return buffer;
     }
 

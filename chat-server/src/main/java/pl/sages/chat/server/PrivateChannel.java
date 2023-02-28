@@ -5,9 +5,9 @@ import java.util.List;
 
 public class PrivateChannel implements Channel{
 
-    private List<ClientService> clientServiceList = new LinkedList<>();
-    private static List<PrivateChannel> privateChannelList = new LinkedList<>();
-    private String name;
+    private final List<ClientService> clientServiceList = new LinkedList<>();
+    private static final List<PrivateChannel> privateChannelList = new LinkedList<>();
+    private final String name;
 
     public PrivateChannel(String name) {
         this.name = name;
@@ -25,6 +25,9 @@ public class PrivateChannel implements Channel{
 
     @Override
     public void addClientServiceToChannel(ClientService clientServiceToAdd) {
+        if(clientServiceList.contains(clientServiceToAdd)) {
+            return;
+        }
         clientServiceList.add(clientServiceToAdd);
     }
 
@@ -40,5 +43,11 @@ public class PrivateChannel implements Channel{
             }
         }
         return null;
+    }
+
+    public static void removeClientServiceFromAllPrivateChannels(ClientService clientService){
+        for (PrivateChannel channel : privateChannelList) {
+            channel.removeClientServiceFromChannel(clientService);
+        }
     }
 }
