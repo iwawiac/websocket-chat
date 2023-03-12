@@ -22,6 +22,7 @@ public final class ServerMessages {
     public static final String leftPrivateChannel = "Server: you have left the private channel, channel name: ";
     public static final String activeChannel = "Server: you are now writing in the channel: ";
     public static final String backToGroupChannel = "Server: you are back to the group channel";
+   // TODO implement validation for invalid No of args in channel-related classes
     public static final String invalidNumberOfArgumentsForChannelCommand = "Server: invalid number of arguments. Please provide channel name after channel-related command, no spaces allowed \n(for example </create_channel testChannel>) ";
     public static final String channelNameTaken = "Server: this channel name is already taken, please pick a different name for the new channel";
     public static final String channelNotFound = "Server: unable to find private channel with the name specified bu user. Please check whether the name is correct";
