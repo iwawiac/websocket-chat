@@ -1,5 +1,7 @@
 package pl.sages.chat.server;
 
+import pl.sages.chat.server.menu.MenuStrategyManager;
+
 import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
@@ -11,6 +13,7 @@ public class ClientService implements Runnable {
     private OutputStream outputStream;
     private String clientUserName;
     private Channel activeChannel = GroupChannel.getInstance();
+    private MenuStrategyManager menuStrategyManager;
 
     public ClientService(Socket clientSocket) {
         try {
@@ -19,6 +22,7 @@ public class ClientService implements Runnable {
             this.outputStream = clientSocket.getOutputStream();
             this.clientUserName = new String(ReaderUtils.readResponse(this.inputStream));
             GroupChannel.getInstance().addClientServiceToChannel(this);
+            menuStrategyManager = new MenuStrategyManager(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,7 +56,7 @@ public class ClientService implements Runnable {
                     break;
                 }
                 if (messageFromClient.startsWith("/")) {
-                    MenuUtils.processMenuCommand(messageFromClient, this);
+                    menuStrategyManager.processMenuCommand(messageFromClient);
                 } else {
                     broadcastMessageToClients(clientUserName + ": " + messageFromClient, true);
                 }

@@ -91,7 +91,7 @@ public class ChatClient {
 
                 try{
                     ByteBuffer buffer = readFileIntoByteBuffer(file);
-                    webSocket.sendText("/send_file test3.jpg", true);
+                    webSocket.sendText("/send_file "+ fileName, true);
                     webSocket.sendBinary(buffer, true).join();
                     System.out.println("file sent");
                 } catch (IOException e) {
