@@ -8,15 +8,8 @@ import pl.sages.chat.server.menu.IMenuStrategy;
 import java.io.IOException;
 
 public class SendFileStrategy implements IMenuStrategy {
-
-    private ClientService clientService;
-
-    public SendFileStrategy(ClientService clientService) {
-        this.clientService = clientService;
-    }
-
     @Override
-    public void executeMenuCommandStrategy(String commandFromClient) {
+    public void executeMenuCommandStrategy(String commandFromClient, ClientService clientService) {
         try {
             String [] partsFromClientMenuCommand = commandFromClient.split(" ");
             String fileName = partsFromClientMenuCommand[1];

@@ -5,16 +5,9 @@ import pl.sages.chat.server.menu.IMenuStrategy;
 import pl.sages.chat.server.menu.ServerMessages;
 
 public class SwitchChannelStrategy implements IMenuStrategy {
-
-    private ClientService clientService;
-
-    public SwitchChannelStrategy(ClientService clientService) {
-        this.clientService = clientService;
-    }
-
     @Override
-    public void executeMenuCommandStrategy(String commandFromClient) {
-        String [] partsFromClientMenuCommand = commandFromClient.split(" ");
+    public void executeMenuCommandStrategy(String commandFromClient, ClientService clientService) {
+        String[] partsFromClientMenuCommand = commandFromClient.split(" ");
         String channelName = partsFromClientMenuCommand[1];
         if (channelName.equals("group")) {
             clientService.setActiveChannel(GroupChannel.getInstance());
