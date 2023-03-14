@@ -8,7 +8,7 @@ Preferences -> Java Compiler -> Additional Command Line Parameters -> should be 
 
 DO POPRAWY:
 
-Aktualnie cała logika siedzi w jednym pliku - warto to ładniej porozdzielać tak, jak jest w przypadku chat-server
+DONE -> Aktualnie cała logika siedzi w jednym pliku - warto to ładniej porozdzielać tak, jak jest w przypadku chat-server
 
 File to przestarzała klasa w Javie do obsługi plików. Aktualnie zalecane jest stosowanie java.nio.files, czyli Path oraz Files.
 
