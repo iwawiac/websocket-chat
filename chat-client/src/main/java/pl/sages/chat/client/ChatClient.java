@@ -25,7 +25,7 @@ public class ChatClient {
             String input = scanner.nextLine();
 
             if (input.contains("/send_file")) {
-                ClientFileUtils.sendBinary(webSocket, input);
+                FileUtils.sendBinary(webSocket, input);
             } else {
                 webSocket.sendText(input, true).join();
             }
