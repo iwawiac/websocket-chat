@@ -21,6 +21,11 @@ public class ChatClient {
         webSocket.sendText(userName, true).join();
         System.out.println("You are now in the group chat, type /help for the list of available commands");
 
+        // running on a separate thread in order not to block on .take() operations
+        ClientFileWatcher clientFileWatcher = new ClientFileWatcher();
+        Thread fileWatcherThread = new Thread(clientFileWatcher);
+        fileWatcherThread.start();
+
         while (!webSocket.isOutputClosed() && !webSocket.isInputClosed()) {
             String input = scanner.nextLine();
 
