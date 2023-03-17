@@ -11,6 +11,7 @@ public class CreateChannelStrategy implements IMenuStrategy {
         String privateChannelName = partsFromClientMenuCommand[1];
         if (PrivateChannel.findChannelByName(privateChannelName) != null) {
             clientService.replyFromServerToClient(ServerMessages.channelNameTaken);
+            return;
         }
         PrivateChannel newPrivateChannel = new PrivateChannel(privateChannelName);
         newPrivateChannel.addClientServiceToChannel(clientService);
