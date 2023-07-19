@@ -29,7 +29,9 @@
                 <configuration>
                     <source>19</source>
                     <target>19</target>
-                    <enablePreview>true</enablePreview>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
